@@ -7,8 +7,6 @@
 // import solutionRoutes from "./routes/solution.routes.js";
 // import contactRoutes from "./routes/contact.routes.js";
 
-
-
 // dotenv.config();
 // connectDB();
  
@@ -38,6 +36,8 @@ import serviceRoutes from "./routes/serviceRoutes.js";
 import processRoutes from "./routes/process.routes.js";
 import solutionRoutes from "./routes/solution.routes.js";
 import contactRoutes from "./routes/contact.routes.js";
+import { registerUser } from "./controllers/register.controller.js";
+import { loginUser } from "./controllers/login.controller.js";
 
 dotenv.config();
 connectDB();
@@ -54,7 +54,8 @@ app.use("/api/services", serviceRoutes);
 app.use("/api/process", processRoutes);
 app.use("/api/solutions", solutionRoutes);
 app.use("/api/contact", contactRoutes);
-
+app.use("/auth/register",registerUser);
+app.use("/auth/login",loginUser)
 // ✅ Health check
 app.get("/", (req, res) => res.send("API running 🚀"));
 
