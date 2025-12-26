@@ -4,13 +4,14 @@ const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
+      required: true,
       trim: true,
     },
 
     email: {
       type: String,
       required: true,
-      unique: true,
+  
       lowercase: true,
       trim: true,
     },
@@ -19,21 +20,27 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 6,
-      select: false, // 🔐 VERY IMPORTANT
+      select: false, // 🔐 never return password by default
     },
 
     role: {
       type: String,
-      enum: ["admin", "user"],
-      default: "user",
+      enum: ["admin"],
+      default: "admin",
     },
 
-    isActive: {
-      type: Boolean,
-      default: true,
+    // 🔁 Forgot / Reset password support
+    resetPasswordToken: {
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: Date,
     },
   },
   { timestamps: true }
 );
 
-export default mongoose.model("User", userSchema);
+// ✅ Prevent model overwrite error (important for nodemon / Next.js)
+const User = mongoose.models.User || mongoose.model("User", userSchema);
+
+export default User;
