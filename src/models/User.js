@@ -11,16 +11,16 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
-  
       lowercase: true,
       trim: true,
+      unique: true, // ✅ strongly recommended
     },
 
     password: {
       type: String,
       required: true,
       minlength: 6,
-      select: false, // 🔐 never return password by default
+      select: false,
     },
 
     role: {
@@ -29,18 +29,23 @@ const userSchema = new mongoose.Schema(
       default: "admin",
     },
 
-    // 🔁 Forgot / Reset password support
+    // 🔁 Forgot / Reset password
     resetPasswordToken: {
       type: String,
     },
+
     resetPasswordExpires: {
       type: Date,
+    },
+
+    resetPasswordCode: {
+      type: String, // ✅ REQUIRED
     },
   },
   { timestamps: true }
 );
 
-// ✅ Prevent model overwrite error (important for nodemon / Next.js)
+// ✅ Prevent model overwrite error
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 
 export default User;
