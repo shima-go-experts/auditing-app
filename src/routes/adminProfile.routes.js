@@ -9,7 +9,7 @@ const router = express.Router();
 ================================ */
 router.post(
   "/",
-  upload.single("avatar"), // ✅ Multer added
+  upload.single("avatar"),
   async (req, res) => {
     try {
       const { name, email, role } = req.body;
@@ -42,31 +42,37 @@ router.post(
 );
 
 /* ================================
-   UPDATE AVATAR ONLY
+   UPDATE PROFILE (ALL FIELDS)
 ================================ */
 
 router.put(
-  "/:id/avatar",
-  upload.single("avatar"),
+  "/:id",
+  upload.single("avatar"), // avatar is optional
   async (req, res) => {
     try {
-      if (!req.file) {
-        return res.status(400).json({
+      const { name, email, role } = req.body;
+
+      const updateData = {};
+      if (name) updateData.name = name;
+      if (email) updateData.email = email;
+      if (role) updateData.role = role;
+      if (req.file) updateData.avatar = `/uploads/${req.file.filename}`;
+
+      const admin = await Admin.findByIdAndUpdate(req.params.id, updateData, {
+        new: true,
+      });
+
+      if (!admin) {
+        return res.status(404).json({
           success: false,
-          message: "Avatar file is required",
+          message: "Admin not found",
         });
       }
 
-      const admin = await Admin.findByIdAndUpdate(
-        req.params.id,
-        { avatar: `/uploads/${req.file.filename}` },
-        { new: true }
-      );
-
       res.json({
         success: true,
-        message: "Avatar updated successfully",
-        data: admin,
+        message: "Profile updated successfully",
+        admin,
       });
     } catch (err) {
       res.status(500).json({
