@@ -171,9 +171,10 @@ const startServer = async () => {
 
     // 3️⃣ Serve uploaded images
     app.use(
-      "/uploads",
-      express.static(path.join(__dirname, "uploads"))
-    );
+  "/uploads",
+  express.static(path.join(process.cwd(), "uploads"))
+);
+
 
     // 4️⃣ Routes
     app.use("/api/auth", authRoutes);
