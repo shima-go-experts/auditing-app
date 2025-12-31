@@ -34,8 +34,35 @@
 // };
 
 
-// controllers/adminProfile.controller.js
 import Admin from "../models/Admin.js";
+import cloudinary from "../config/cloudinary.js"; // Cloudinary config
+import fs from "fs";
+
+/* ===============================
+   CREATE ADMIN
+================================ */
+export const createAdmin = async (req, res) => {
+  try {
+    const { name, email, role } = req.body;
+    const newAdminData = { name, email, role };
+
+    // Upload avatar if file exists
+    if (req.files?.avatar) {
+      const file = req.files.avatar;
+      const result = await cloudinary.uploader.upload(file.tempFilePath, {
+        folder: "admin_avatars",
+        transformation: [{ width: 400, height: 400, crop: "limit" }],
+      });
+      newAdminData.avatar = result.secure_url;
+      fs.unlinkSync(file.tempFilePath);
+    }
+
+    const admin = await Admin.create(newAdminData);
+    res.status(201).json({ success: true, message: "Admin created", admin });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 /* ===============================
    GET ADMIN PROFILE
@@ -43,72 +70,52 @@ import Admin from "../models/Admin.js";
 export const getAdminProfile = async (req, res) => {
   try {
     const admin = await Admin.findById(req.params.id);
-
-    if (!admin) {
-      return res.status(404).json({
-        success: false,
-        message: "Admin not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      data: admin,
-    });
+    if (!admin) return res.status(404).json({ success: false, message: "Admin not found" });
+    res.json({ success: true, data: admin });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
 /* ===============================
-   UPDATE NAME & EMAIL
+   UPDATE ADMIN PROFILE + AVATAR
 ================================ */
 export const updateAdminProfile = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name, email, role } = req.body;
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+    if (role) updateData.role = role;
 
-    const admin = await Admin.findByIdAndUpdate(
-      req.params.id,
-      { name, email },
-      { new: true }
-    );
+    if (req.files?.avatar) {
+      const file = req.files.avatar;
+      const result = await cloudinary.uploader.upload(file.tempFilePath, {
+        folder: "admin_avatars",
+        transformation: [{ width: 400, height: 400, crop: "limit" }],
+      });
+      updateData.avatar = result.secure_url;
+      fs.unlinkSync(file.tempFilePath);
+    }
 
-    res.json({
-      success: true,
-      message: "Profile updated successfully",
-      data: admin,
-    });
+    const admin = await Admin.findByIdAndUpdate(req.params.id, updateData, { new: true });
+    if (!admin) return res.status(404).json({ success: false, message: "Admin not found" });
+
+    res.json({ success: true, message: "Profile updated successfully", admin });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
 /* ===============================
-   UPLOAD PROFILE IMAGE
+   DELETE ADMIN (optional)
 ================================ */
-export const uploadAdminAvatar = async (req, res) => {
+export const deleteAdmin = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "No image uploaded",
-      });
-    }
-
-    const avatarPath = `/uploads/admin/${req.file.filename}`;
-
-    const admin = await Admin.findByIdAndUpdate(
-      req.params.id,
-      { avatar: avatarPath },
-      { new: true }
-    );
-
-    res.json({
-      success: true,
-      message: "Profile image updated",
-      avatar: admin.avatar,
-    });
+    const admin = await Admin.findByIdAndDelete(req.params.id);
+    if (!admin) return res.status(404).json({ success: false, message: "Admin not found" });
+    res.json({ success: true, message: "Admin deleted successfully" });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Upload failed" });
+    res.status(500).json({ success: false, message: error.message });
   }
 };

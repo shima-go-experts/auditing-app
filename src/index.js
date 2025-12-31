@@ -152,11 +152,6 @@ import solutionRoutes from "./routes/solution.routes.js";
 import contactRoutes from "./routes/contact.routes.js";
 import adminProfileRoutes from "./routes/adminProfile.routes.js";
 
-/* =========================
-   Fix __dirname for ES module
-========================= */
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const startServer = async () => {
   try {
@@ -169,12 +164,11 @@ const startServer = async () => {
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
-    // 3️⃣ Serve uploaded images
-    app.use(
-  "/uploads",
-  express.static(path.join(process.cwd(), "uploads"))
-);
+    // Static folder for uploads (optional, for local preview)
+app.use("/uploads", express.static("uploads"));
 
+// Admin routes
+app.use("/api/admin/profile", adminProfileRoutes);
 
     // 4️⃣ Routes
     app.use("/api/auth", authRoutes);
@@ -189,7 +183,7 @@ const startServer = async () => {
     // 5️⃣ Start server
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () =>
-      console.log(`🚀 Server running at http://127.0.0.1:${PORT}`)
+      console.log(`Server running at http://127.0.0.1:${PORT}/`)
     );
   } catch (error) {
     console.error("❌ Server failed to start:", error);
